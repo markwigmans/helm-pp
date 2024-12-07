@@ -21,7 +21,7 @@ def process_egress_to(doc:dict) -> list[str]:
                 paths.append(f"spec.egress.{rule_index}.to.{entry_index}.namespaceSelector.matchLabels.[kubernetes.io/metadata.name]")
     return paths
 
-def spaces(n):
+def spaces(n:int) -> str:
     return ' ' * n
 
 def print_target(offset:int, resource_name:str, paths:list[str], output_stream) -> None:
@@ -35,12 +35,12 @@ def print_target(offset:int, resource_name:str, paths:list[str], output_stream) 
         print(f"{spaces(offset)}  options:", file=output_stream)
         print(f"{spaces(offset)}    create: true", file=output_stream)
 
-def print_source(output_stream, config):
-    print(f"- source:", file=output_stream)
-    print(f"    kind: {config['kind']}", file=output_stream)
-    print(f"    name: {config['name']}", file=output_stream)
-    print(f"    fieldPath: {config['fieldPath']}", file=output_stream)
-    print(f"  targets:", file=output_stream)
+def print_source(offset:int, output_stream, config) -> None:
+    print(f"{spaces(offset)}- source:", file=output_stream)
+    print(f"{spaces(offset)}    kind: {config['kind']}", file=output_stream)
+    print(f"{spaces(offset)}    name: {config['name']}", file=output_stream)
+    print(f"{spaces(offset)}    fieldPath: {config['fieldPath']}", file=output_stream)
+    print(f"{spaces(offset)}  targets:", file=output_stream)
 
 def process_manifests(input_stream, output_stream, config):
     documents = yaml.safe_load_all(input_stream)
@@ -56,9 +56,10 @@ def process_manifests(input_stream, output_stream, config):
         if kind in ["networkpolicy"]:
             replacements[resource_name] = add_namespace_selector(doc)
 
-    print_source(output_stream, config)
+    offset = 0
+    print_source(offset, output_stream, config)
     for key, value in replacements.items():
-        print_target(4, key, value, output_stream)
+        print_target(offset+4, key, value, output_stream)
 
 if __name__ == "__main__":
     config = configparser.ConfigParser()

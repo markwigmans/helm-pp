@@ -1,3 +1,62 @@
-# Helm chart Post Process Scripts
+# Helm Chart Post-Processing Scripts
 
-add-label.py
+## Overview
+
+This repository contains Python scripts designed to post-process the output of Helm charts, ensuring compliance with specific rules. The scripts provide functionality to:
+
+1. Add a required label to every resource
+2. Add a NamespaceSelector to NetworkPolicy resources
+
+## Scripts
+
+### 1. Add Required Label (`add-label.py`)
+
+This script adds a specified label to every resource in the Helm chart output.
+
+#### Functionality:
+- Adds the label to `metadata/labels` if it exists
+- For resources that support templates (e.g., 'Deployment'), updates `template/metadata/labels` as well
+
+#### Usage:
+````console
+python add-label.py [input_file] [output_file]
+````
+
+- If no `output_file` is specified, the script uses stdout
+- If no `input_file` is provided, the script reads from stdin
+
+#### Configuration:
+The script uses `config.ini` for configuration:
+
+| Section | Key    | Description            | Default |
+|---------|--------|------------------------|---------|
+| label   | name   | Name of label          | dname   |
+| label   | prefix | Prefix of label value  |         |
+
+### 2. Add Required NamespaceSelector (`add-nsselector.py`)
+
+This script generates a [Kustomize](https://kustomize.io/) replacement file to ensure that every NetworkPolicy with a from/to podSelector includes a NamespaceSelector.
+
+#### Usage:
+
+````console
+python add-nsselector.py [input_file] [output_file]
+````
+
+- If no `output_file` is specified, the script uses stdout
+- If no `input_file` is provided, the script reads from stdin
+
+#### Configuration:
+The script uses `config.ini` for configuration:
+
+| Section     | Key       | Description               | Default             |
+|-------------|-----------|---------------------------|---------------------|
+| replacement | kind      | Kind of source field      | Deployment          |
+| replacement | name      | Name of source field      | api                 |
+| replacement | fieldPath | FieldPath of source field | metadata.namespace  |
+
+## Requirements
+
+- [Python 3.x](https://www.python.org/)
+- [Helm](https://helm.sh/) (for generating the initial chart output)
+- [Kustomize](https://kustomize.io/) (for applying the NamespaceSelector replacements)

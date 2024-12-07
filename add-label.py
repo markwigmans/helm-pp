@@ -2,17 +2,17 @@ import sys
 import yaml
 import configparser
 
-def generate_dynamic_label(label_prefix, resource_type, resource_name):
+def generate_dynamic_label(label_prefix:str, resource_type:str, resource_name:str) -> str:
     if label_prefix: 
         return f"{label_prefix}-{resource_type}-{resource_name}" 
     else: 
         return f"{resource_type}-{resource_name}"
 
-def add_label_to_template(resource, label_key, label_value):
+def add_label_to_template(resource:dict, label_key:str, label_value:str) -> None:
     labels = resource.setdefault("spec", {}).setdefault("template", {}).setdefault("metadata", {}).setdefault("labels", {})
     labels[label_key] = label_value
 
-def process_manifests(label_name, label_prefix, input_stream, output_stream):
+def process_manifests(label_name, label_prefix, input_stream, output_stream) -> None:
     documents = yaml.safe_load_all(input_stream)
     output_documents = []
 
@@ -24,7 +24,7 @@ def process_manifests(label_name, label_prefix, input_stream, output_stream):
         resource_name = doc.get("metadata", {}).get("name", "unknown")
         dynamic_label = generate_dynamic_label(label_prefix, kind, resource_name)
 
-        # Add label to metadata
+        # Add label to metadata if ["metadata"]["labels"] exists
         if "metadata" in doc and "labels" in doc["metadata"]:
             doc["metadata"]["labels"][label_name] = dynamic_label
 
