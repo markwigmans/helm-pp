@@ -12,7 +12,6 @@ def add_label_to_template(resource, label_key, label_value):
     labels = resource.setdefault("spec", {}).setdefault("template", {}).setdefault("metadata", {}).setdefault("labels", {})
     labels[label_key] = label_value
 
-
 def process_manifests(label_name, label_prefix, input_stream, output_stream):
     documents = yaml.safe_load_all(input_stream)
     output_documents = []
@@ -56,15 +55,12 @@ if __name__ == "__main__":
 
     # Check if a file path is provided as an argument
     if len(sys.argv) == 1:
-        # No arguments: input from stdin, output to stdout
         process_manifests(name, prefix, sys.stdin, sys.stdout)
     elif len(sys.argv) == 2:
-        # One argument: input from file, output to stdout
         input_file = sys.argv[1]
         with open(input_file, 'r') as file:
             process_manifests(name, prefix, file, sys.stdout)
     elif len(sys.argv) == 3:
-        # Two arguments: input from file, output to file
         input_file = sys.argv[1]
         output_file = sys.argv[2]
         with open(input_file, 'r') as infile, open(output_file, 'w') as outfile:
