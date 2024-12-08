@@ -6,6 +6,7 @@ This repository contains Python scripts designed to post-process the output of H
 
 1. Add a required label to every resource
 2. Add a NamespaceSelector to NetworkPolicy resources
+3. Retrieve images
 
 ## Scripts
 
@@ -56,6 +57,20 @@ The script uses `config.ini` for configuration:
 | nsselector  | kind      | Kind of source field      | Deployment         |
 | nsselector  | name      | Name of source field      | api                |
 | nsselector  | fieldPath | FieldPath of source field | metadata.namespace |
+
+### 3. Retrieve Image Descriptions (`get-image.py`)
+
+Retrieve the image descriptions as mentioned in the deployment files as well dynamic references via environment variables.
+
+#### Usage:
+
+````console
+python get-image.py [input_file] [output_file]
+````
+- If no `input_file` is provided, the script reads from stdin
+- If no `output_file` is specified, the script uses stdout
+
+If only 1 file is given, it will be used as `output_file`. 
 
 ## Requirements
 
