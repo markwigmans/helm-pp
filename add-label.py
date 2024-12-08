@@ -5,36 +5,30 @@ import configparser
 def generate_dynamic_label(resource_type:str, resource_name:str) -> str:
         return f"{resource_type}-{resource_name}"
 
-def add_label_to_template(resource:dict, label_key:str, label_value:str) -> None:
-    labels = resource.setdefault("spec", {}).setdefault("template", {}).setdefault("metadata", {}).setdefault("labels", {})
-    labels[label_key] = label_value
+def add_label_to_template(resource: dict, label_key: str, label_value: str) -> None:
+    resource.get("spec", {}).get("template", {}).get("metadata", {}).setdefault("labels", {})[label_key] = label_value
 
 def process_manifests(label_name, input_stream, output_stream) -> None:
     documents = yaml.safe_load_all(input_stream)
     output_documents = []
 
-    for doc in documents:
-        if doc is None or not isinstance(doc, dict):
-            continue
-
+    for doc in filter(lambda x: isinstance(x, dict), documents):
         kind = doc.get("kind", "").lower()
         resource_name = doc.get("metadata", {}).get("name", "unknown")
         dynamic_label = generate_dynamic_label(kind, resource_name)
 
         # Add label to metadata if ["metadata"]["labels"] exists
-        if "metadata" in doc and "labels" in doc["metadata"]:
+        if "labels" in doc.get("metadata", {}):
             doc["metadata"]["labels"][label_name] = dynamic_label
 
         # Add label to spec template
-        if "spec" in doc and "template" in doc["spec"]:
+        if "template" in doc.get("spec", {}):
             add_label_to_template(doc, label_name, dynamic_label)
 
-        # Special handling for CronJob (nested JobTemplate)
-        if "spec" in doc and "jobTemplate" in doc["spec"]:
-            add_label_to_template(doc["spec"]["jobTemplate"], label_name, dynamic_label)
-
-        if "spec" in doc and "statefulSet" in doc["spec"]:
-            add_label_to_template(doc["spec"]["statefulSet"], label_name, dynamic_label)
+        # handle template if part of another structure
+        for key in ("jobTemplate", "statefulSet"):
+            if key in doc.get("spec", {}):
+                add_label_to_template(doc["spec"].get(key, doc), label_name, dynamic_label)
 
         output_documents.append(doc)
 

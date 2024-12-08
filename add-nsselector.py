@@ -44,22 +44,14 @@ def print_source(offset:int, output_stream, config) -> None:
 
 def process_manifests(input_stream, output_stream, config):
     documents = yaml.safe_load_all(input_stream)
-    replacements= {}
+    replacements = {
+        doc.get("metadata", {}).get("name", "unknown"): add_namespace_selector(doc)
+        for doc in filter(lambda x: isinstance(x, dict) and x.get("kind", "").lower() == "networkpolicy", documents)
+    }
 
-    for doc in documents:
-        if doc is None or not isinstance(doc, dict):
-            continue
-
-        kind = doc.get("kind", "").lower()
-        resource_name = doc.get("metadata", {}).get("name", "unknown")
-
-        if kind in ["networkpolicy"]:
-            replacements[resource_name] = add_namespace_selector(doc)
-
-    offset = 0
-    print_source(offset, output_stream, config)
+    print_source(0, output_stream, config)
     for key, value in replacements.items():
-        print_target(offset+4, key, value, output_stream)
+        print_target(4, key, value, output_stream)
 
 def main():
     config = configparser.ConfigParser()
