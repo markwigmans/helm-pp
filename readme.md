@@ -72,6 +72,12 @@ python get-image.py [input_file] [output_file]
 
 If only 1 file is given, it will be used as `output_file`. 
 
+## Installation
+
+````console
+pip install -r requirements.txt
+````
+
 ## Requirements
 
 - [Python 3.x](https://www.python.org/)
