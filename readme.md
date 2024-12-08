@@ -22,8 +22,10 @@ This script adds a specified label to every resource in the Helm chart output.
 python add-label.py [input_file] [output_file]
 ````
 
-- If no `output_file` is specified, the script uses stdout
 - If no `input_file` is provided, the script reads from stdin
+- If no `output_file` is specified, the script uses stdout
+
+If only 1 file is given, it will be used as `output_file`. 
 
 #### Configuration:
 The script uses `config.ini` for configuration:
@@ -31,7 +33,6 @@ The script uses `config.ini` for configuration:
 | Section | Key    | Description            | Default |
 |---------|--------|------------------------|---------|
 | label   | name   | Name of label          | dname   |
-| label   | prefix | Prefix of label value  |         |
 
 ### 2. Add Required NamespaceSelector (`add-nsselector.py`)
 
@@ -42,18 +43,19 @@ This script generates a [Kustomize](https://kustomize.io/) replacement file to e
 ````console
 python add-nsselector.py [input_file] [output_file]
 ````
-
-- If no `output_file` is specified, the script uses stdout
 - If no `input_file` is provided, the script reads from stdin
+- If no `output_file` is specified, the script uses stdout
+
+If only 1 file is given, it will be used as `output_file`. 
 
 #### Configuration:
 The script uses `config.ini` for configuration:
 
-| Section     | Key       | Description               | Default             |
-|-------------|-----------|---------------------------|---------------------|
-| replacement | kind      | Kind of source field      | Deployment          |
-| replacement | name      | Name of source field      | api                 |
-| replacement | fieldPath | FieldPath of source field | metadata.namespace  |
+| Section     | Key       | Description               | Default            |
+|-------------|-----------|---------------------------|--------------------|
+| nsselector  | kind      | Kind of source field      | Deployment         |
+| nsselector  | name      | Name of source field      | api                |
+| nsselector  | fieldPath | FieldPath of source field | metadata.namespace |
 
 ## Requirements
 

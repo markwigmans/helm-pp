@@ -61,22 +61,25 @@ def process_manifests(input_stream, output_stream, config):
     for key, value in replacements.items():
         print_target(offset+4, key, value, output_stream)
 
-if __name__ == "__main__":
+def main():
     config = configparser.ConfigParser()
     config.read(['default.ini','config.ini'])
-    replacement_config = config['replacement']
+    nsselector_config = config['nsselector']
 
     # Check if a file path is provided as an argument
     if len(sys.argv) == 1:
-        process_manifests(sys.stdin, sys.stdout, replacement_config)
+        process_manifests(sys.stdin, sys.stdout, nsselector_config)
     elif len(sys.argv) == 2:
-        input_file = sys.argv[1]
-        with open(input_file, 'r') as file:
-            process_manifests(file, sys.stdout, replacement_config)
+        output_file = sys.argv[1]
+        with open(output_file, 'w') as file:
+            process_manifests(sys.stdin, file, nsselector_config)
     elif len(sys.argv) == 3:
         input_file = sys.argv[1]
         output_file = sys.argv[2]
         with open(input_file, 'r') as infile, open(output_file, 'w') as outfile:
-            process_manifests(infile, outfile, replacement_config)
+            process_manifests(infile, outfile, nsselector_config)
     else:
         print("Usage: python add-nsselector.py [input_file] [output_file]", file=sys.stderr)
+
+if __name__ == "__main__":
+    main()
