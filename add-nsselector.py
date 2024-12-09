@@ -84,16 +84,15 @@ def spaces(n:int) -> str:
     return ' ' * n
 
 def print_target(offset:int, resource_name:str, paths:list[str], output_stream, options) -> None:
-    if len(paths):
-        print(f"{spaces(offset)}- select:", file=output_stream)
-        print(f"{spaces(offset)}    kind: NetworkPolicy", file=output_stream)
-        print(f"{spaces(offset)}    name: {resource_name}", file=output_stream)
-        print(f"{spaces(offset)}  fieldPaths:", file=output_stream)
-        for path in paths:
-            print(f"{spaces(offset)}    - {path}", file=output_stream)
-        if options:
-            print(f"{spaces(offset)}  options:", file=output_stream)
-            print(f"{spaces(offset)}    create: true", file=output_stream)
+    print(f"{spaces(offset)}- select:", file=output_stream)
+    print(f"{spaces(offset)}    kind: NetworkPolicy", file=output_stream)
+    print(f"{spaces(offset)}    name: {resource_name}", file=output_stream)
+    print(f"{spaces(offset)}  fieldPaths:", file=output_stream)
+    for path in paths:
+        print(f"{spaces(offset)}    - {path}", file=output_stream)
+    if options:
+        print(f"{spaces(offset)}  options:", file=output_stream)
+        print(f"{spaces(offset)}    create: true", file=output_stream)
 
 def print_source(offset:int, output_stream, source:dict) -> None:
     print(f"{spaces(offset)}- source:", file=output_stream)
