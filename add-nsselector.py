@@ -7,6 +7,11 @@ def add_namespace_selector(doc:dict) -> list[str]:
 
 def process_ingress_from(doc:dict) -> list[str]:
     paths = []
+
+    # Check if spec.ingress is non-empty
+    if not doc.get('spec', {}).get('ingress', []):
+        return paths  # Return empty list
+
     for rule_index, rule in enumerate(doc.get('spec', {}).get('ingress', [])):
         for entry_index, entry in enumerate(rule.get('from', [])):
             if 'podSelector' in entry:
@@ -15,6 +20,11 @@ def process_ingress_from(doc:dict) -> list[str]:
 
 def process_egress_to(doc:dict) -> list[str]:
     paths = []
+
+    # Check if spec.egress is non-empty
+    if not doc.get('spec', {}).get('egress', []):
+        return paths  # Return empty list
+
     for rule_index, rule in enumerate(doc.get('spec', {}).get('egress', [])):
         for entry_index, entry in enumerate(rule.get('to', [])):
             if 'podSelector' in entry:
