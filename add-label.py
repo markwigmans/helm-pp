@@ -8,6 +8,14 @@ def generate_dynamic_label(resource_type:str, resource_name:str) -> str:
 def add_label_to_template(resource: dict, label_key: str, label_value: str) -> None:
     resource.get("spec", {}).get("template", {}).get("metadata", {}).setdefault("labels", {})[label_key] = label_value
 
+def remove_null_values(data):
+    if isinstance(data, dict):
+        return {k: remove_null_values(v) for k, v in data.items() if v is not None}
+    elif isinstance(data, list):
+        return [remove_null_values(item) for item in data if item is not None]
+    else:
+        return data
+
 def process_manifests(label_name, input_stream, output_stream) -> None:
     documents = yaml.safe_load_all(input_stream)
     output_documents = []
@@ -32,7 +40,8 @@ def process_manifests(label_name, input_stream, output_stream) -> None:
 
         output_documents.append(doc)
 
-    yaml.dump_all(output_documents, output_stream, default_flow_style=False)
+    cleaned_data = remove_null_values(output_documents)
+    yaml.dump_all(cleaned_data, output_stream, default_flow_style=False)
 
 def main():
     config = configparser.ConfigParser()
