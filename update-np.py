@@ -19,8 +19,9 @@ def process_ns_ingress_from(doc:dict) -> list[str]:
 
     for rule_index, rule in enumerate(doc.get('spec', {}).get('ingress', [])):
         for entry_index, entry in enumerate(rule.get('from', [])):
-            if 'podSelector' in entry:
-                paths.append(f"spec.ingress.{rule_index}.from.{entry_index}.namespaceSelector.matchLabels.[kubernetes.io/metadata.name]")
+            if not entry.get('namespaceSelector', {}).get('matchLabels', []):
+                if 'podSelector' in entry:
+                    paths.append(f"spec.ingress.{rule_index}.from.{entry_index}.namespaceSelector.matchLabels.[kubernetes.io/metadata.name]")
     return paths
 
 
@@ -33,8 +34,9 @@ def process_ns_egress_to(doc:dict) -> list[str]:
 
     for rule_index, rule in enumerate(doc.get('spec', {}).get('egress', [])):
         for entry_index, entry in enumerate(rule.get('to', [])):
-            if 'podSelector' in entry:
-                paths.append(f"spec.egress.{rule_index}.to.{entry_index}.namespaceSelector.matchLabels.[kubernetes.io/metadata.name]")
+            if not entry.get('namespaceSelector', {}).get('matchLabels', []):
+                if 'podSelector' in entry:
+                    paths.append(f"spec.egress.{rule_index}.to.{entry_index}.namespaceSelector.matchLabels.[kubernetes.io/metadata.name]")
     return paths
 
 

@@ -7,9 +7,13 @@ from datetime import datetime
 def generate_dynamic_label(resource_type:str, resource_name:str) -> str:
         return f"{resource_type}-{resource_name}"
 
+def add_label(resource: dict, key: str, value: str) -> None:
+    # add value if key does not exist
+    resource.setdefault(key, value)
 
-def add_label_to_template(resource: dict, label_key: str, label_value: str) -> None:
-    resource.get("spec", {}).get("template", {}).get("metadata", {}).setdefault("labels", {})[label_key] = label_value
+
+def add_label_to_template(resource: dict, key: str, value: str) -> None:
+    add_label(resource.get("spec", {}).get("template", {}).get("metadata", {}).setdefault("labels", {}), key, value)
 
 
 def remove_null_values(data):
@@ -33,7 +37,7 @@ def process_manifests(label_name, input_stream, output_stream) -> None:
 
         # Add label to metadata if ["metadata"]["labels"] exists
         if "labels" in doc.get("metadata", {}):
-            doc["metadata"]["labels"][label_name] = dynamic_label
+            add_label(doc["metadata"]["labels"],label_name, dynamic_label)
 
         # Add label to spec template
         if "template" in doc.get("spec", {}):
