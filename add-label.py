@@ -1,11 +1,15 @@
+"""
+Add Required labels to a given K8s resource file
+"""
 import sys
 import yaml
-import configparser
+from configparser import ConfigParser
 from datetime import datetime
 
 
 def generate_dynamic_label(resource_type:str, resource_name:str) -> str:
         return f"{resource_type}-{resource_name}"
+
 
 def add_label(resource: dict, key: str, value: str) -> None:
     # add value if key does not exist
@@ -56,10 +60,10 @@ def process_manifests(label_name, input_stream, output_stream) -> None:
 
 
 def main():
-    config = configparser.ConfigParser()
+    config = ConfigParser()
     config.read(['default.ini','config.ini'])
     label_config = config['label']
-    name= label_config['name']
+    name = label_config['name']
 
     # Check if a file path is provided as an argument
     if len(sys.argv) == 1:

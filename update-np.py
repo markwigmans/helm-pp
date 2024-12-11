@@ -1,11 +1,9 @@
 import sys
 import yaml
-import configparser
+from configparser import ConfigParser
 from datetime import datetime
 
-#
-# ------------
-#
+
 def process_ns_selector(doc:dict) -> dict:
     return to_target_dict(doc, process_ns_ingress_from(doc) + process_ns_egress_to(doc))
 
@@ -146,7 +144,7 @@ def process_manifests(input_stream, output_stream, ns_config, ipblock_configs):
             print_target(4, resource_name, targets['fieldPaths'], output_stream, source['options'])
 
 def main():
-    config = configparser.ConfigParser()
+    config = ConfigParser()
     config.read(['default.ini','config.ini'])
 
     ipblocks = []
