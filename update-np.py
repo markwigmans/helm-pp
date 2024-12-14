@@ -1,14 +1,15 @@
 import sys
-import yaml
 from configparser import ConfigParser
 from datetime import datetime
 
+import yaml
 
-def process_ns_selector(doc:dict) -> dict:
+
+def process_ns_selector(doc: dict) -> dict:
     return to_target_dict(doc, process_ns_ingress_from(doc) + process_ns_egress_to(doc))
 
 
-def process_ns_ingress_from(doc:dict) -> list[str]:
+def process_ns_ingress_from(doc: dict) -> list[str]:
     paths = []
 
     # Check if spec.ingress is non-empty
@@ -19,11 +20,12 @@ def process_ns_ingress_from(doc:dict) -> list[str]:
         for entry_index, entry in enumerate(rule.get('from', [])):
             if not entry.get('namespaceSelector', {}).get('matchLabels', []):
                 if 'podSelector' in entry:
-                    paths.append(f"spec.ingress.{rule_index}.from.{entry_index}.namespaceSelector.matchLabels.[kubernetes.io/metadata.name]")
+                    paths.append(
+                        f"spec.ingress.{rule_index}.from.{entry_index}.namespaceSelector.matchLabels.[kubernetes.io/metadata.name]")
     return paths
 
 
-def process_ns_egress_to(doc:dict) -> list[str]:
+def process_ns_egress_to(doc: dict) -> list[str]:
     paths = []
 
     # Check if spec.egress is non-empty
@@ -34,24 +36,23 @@ def process_ns_egress_to(doc:dict) -> list[str]:
         for entry_index, entry in enumerate(rule.get('to', [])):
             if not entry.get('namespaceSelector', {}).get('matchLabels', []):
                 if 'podSelector' in entry:
-                    paths.append(f"spec.egress.{rule_index}.to.{entry_index}.namespaceSelector.matchLabels.[kubernetes.io/metadata.name]")
+                    paths.append(
+                        f"spec.egress.{rule_index}.to.{entry_index}.namespaceSelector.matchLabels.[kubernetes.io/metadata.name]")
     return paths
 
 
-def to_target_dict(doc:dict, paths:list[str]) -> dict:
+def to_target_dict(doc: dict, paths: list[str]) -> dict:
     if paths:
-        return { 'target' : doc, 'fieldPaths' : paths }
+        return {'target': doc, 'fieldPaths': paths}
     else:
         return {}
 
-#
-# ------------
-#
-def process_ipblock_selector(doc:dict, match:str) -> dict:
+
+def process_ipblock_selector(doc: dict, match: str) -> dict:
     return to_target_dict(doc, process_ipblock_ingress_from(doc, match) + process_ipblock_egress_to(doc, match))
 
 
-def process_ipblock_ingress_from(doc:dict, match:str) -> list[str]:
+def process_ipblock_ingress_from(doc: dict, match: str) -> list[str]:
     paths = []
 
     # Check if spec.egress is non-empty
@@ -67,7 +68,7 @@ def process_ipblock_ingress_from(doc:dict, match:str) -> list[str]:
     return paths
 
 
-def process_ipblock_egress_to(doc:dict, match:str) -> list[str]:
+def process_ipblock_egress_to(doc: dict, match: str) -> list[str]:
     paths = []
 
     # Check if spec.egress is non-empty
@@ -82,14 +83,12 @@ def process_ipblock_egress_to(doc:dict, match:str) -> list[str]:
                     paths.append(f"spec.egress.{rule_index}.to.{entry_index}.ipBlock.cidr")
     return paths
 
-#
-# ------------
-#
-def spaces(n:int) -> str:
+
+def spaces(n: int) -> str:
     return ' ' * n
 
 
-def print_target(offset:int, resource_name:str, paths:list[str], output_stream, options) -> None:
+def print_target(offset: int, resource_name: str, paths: list[str], output_stream, options) -> None:
     print(f"{spaces(offset)}- select:", file=output_stream)
     print(f"{spaces(offset)}    kind: NetworkPolicy", file=output_stream)
     print(f"{spaces(offset)}    name: {resource_name}", file=output_stream)
@@ -101,27 +100,25 @@ def print_target(offset:int, resource_name:str, paths:list[str], output_stream, 
         print(f"{spaces(offset)}    create: true", file=output_stream)
 
 
-def print_source(offset:int, output_stream, source:dict) -> None:
+def print_source(offset: int, output_stream, source: dict) -> None:
     print(f"{spaces(offset)}- source:", file=output_stream)
     print(f"{spaces(offset)}    kind: {source['kind']}", file=output_stream)
     print(f"{spaces(offset)}    name: {source['name']}", file=output_stream)
     print(f"{spaces(offset)}    fieldPath: {source['fieldpath']}", file=output_stream)
     print(f"{spaces(offset)}  targets:", file=output_stream)
 
-#
-# ------------
-#
+
 def create_key_from_dict(dict_key):
     if not isinstance(dict_key, dict) or 'kind' not in dict_key or 'name' not in dict_key:
         raise ValueError("Input must be a dictionary with 'kind' and 'name' fields")
     return f"{dict_key['kind']}:{dict_key['name']}"
 
 
-def add_to_dict(dictionary:dict, dict_key:dict, value: dict, options) -> None:
+def add_to_dict(dictionary: dict, dict_key: dict, value: dict, options) -> None:
     if value:
         key = create_key_from_dict(dict_key)
         if key not in dictionary:
-            dictionary[key] = { 'source' : dict_key, 'targets' : [ value ], 'options': options }
+            dictionary[key] = {'source': dict_key, 'targets': [value], 'options': options}
         else:
             dictionary[key]['targets'].append(value)
 
@@ -135,7 +132,7 @@ def process_manifests(input_stream, output_stream, ns_config, ipblock_configs):
         for config in ipblock_configs:
             add_to_dict(sources, config, process_ipblock_selector(doc, config['field']), False)
 
-    print(f"#\n# GENERATED by 'update-np.py' at {datetime.now()}\n#", file=output_stream)
+    print(f"#\n# GENERATED by 'update-np.py' at {datetime.now().strftime('%H:%M:%S')}\n#", file=output_stream)
     for source_key in sources:
         source = sources[source_key]
         print_source(0, output_stream, source['source'])
@@ -143,9 +140,10 @@ def process_manifests(input_stream, output_stream, ns_config, ipblock_configs):
             resource_name = targets['target'].get("metadata", {}).get("name", "unknown")
             print_target(4, resource_name, targets['fieldPaths'], output_stream, source['options'])
 
+
 def main():
     config = ConfigParser()
-    config.read(['default.ini','config.ini'])
+    config.read(['default.ini', 'config.ini'])
 
     ipblocks = []
     for section in config.sections():
@@ -168,6 +166,7 @@ def main():
             process_manifests(infile, outfile, nsselector_config, ipblocks)
     else:
         print("Usage: python update-np.py [input_file] [output_file]", file=sys.stderr)
+
 
 if __name__ == "__main__":
     main()
