@@ -6,6 +6,7 @@ import sys
 from configparser import ConfigParser
 from copy import deepcopy
 from datetime import datetime
+from typing import cast
 
 import yaml
 
@@ -42,10 +43,7 @@ def create_key_value(match: tuple[str, str]) -> str:
 
 def add_to_dict(dictionary: dict, match: tuple[str, str], label) -> None:
     key = create_key_value(match)
-    if key not in dictionary:
-        dictionary[key] = {'key': key, 'resources': [label]}
-    else:
-        dictionary[key]['resources'].append(label)
+    dictionary.setdefault(key, []).append(label)
 
 
 def add_matching_labels(matching_dict: dict, resource: dict, label: str) -> None:
@@ -88,7 +86,7 @@ def create_pod_selector_rules(entry: dict, matching_labels: dict, label_name: st
     result = []
     labels = entry.get("podSelector", {}).get("matchLabels", {})
     for key, value in labels.items():
-        matching = matching_labels.get(create_key_value((key, value)), {}).get('resources', [])
+        matching = matching_labels.get(create_key_value((key, value)), [])
         result.extend(create_rules(entry, matching, label_name))
     return result
 
@@ -122,7 +120,7 @@ def update_network_policy(doc: dict, matching_labels: dict, label_name: str) -> 
     process_ns_egress_to(doc, matching_labels, label_name)
 
 
-def process_manifests(label_name:str, extra_labels:dict, input_stream, output_stream) -> None:
+def process_manifests(label_name: str, extra_labels: dict, input_stream, output_stream) -> None:
     documents = yaml.safe_load_all(input_stream)
     step1_documents = []
     matching_labels = {}
@@ -173,7 +171,7 @@ def main():
     extra_labels = {}
     for section in config.sections():
         if section.startswith('label.match.'):
-            result_tuple = tuple(config[section]['value'].split(':'))
+            result_tuple = cast(tuple[str, str], tuple(config[section]['value'].split(':', 1)))
             add_to_dict(extra_labels, result_tuple, config[section]['extra.label'])
 
     # Check if a file path is provided as an argument
