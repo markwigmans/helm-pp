@@ -10,7 +10,7 @@ from datetime import datetime
 import yaml
 
 # Configure the logger
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 def generate_dynamic_label(resource_type: str, resource_name: str) -> str:
@@ -122,7 +122,7 @@ def update_network_policy(doc: dict, matching_labels: dict, label_name: str) -> 
     process_ns_egress_to(doc, matching_labels, label_name)
 
 
-def process_manifests(label_name, input_stream, output_stream) -> None:
+def process_manifests(label_name:str, extra_labels:dict, input_stream, output_stream) -> None:
     documents = yaml.safe_load_all(input_stream)
     step1_documents = []
     matching_labels = {}
@@ -151,6 +151,8 @@ def process_manifests(label_name, input_stream, output_stream) -> None:
 
     # step 2 - update network policies
     step2_documents = []
+    # add the extra labels
+    matching_labels = matching_labels | extra_labels
     for doc in filter(lambda x: isinstance(x, dict), step1_documents):
         kind = doc.get("kind", "").lower()
         if kind == "networkpolicy":
@@ -168,18 +170,24 @@ def main():
     label_config = config['label']
     name = label_config['name']
 
+    extra_labels = {}
+    for section in config.sections():
+        if section.startswith('label.match.'):
+            result_tuple = tuple(config[section]['value'].split(':'))
+            add_to_dict(extra_labels, result_tuple, config[section]['extra.label'])
+
     # Check if a file path is provided as an argument
     if len(sys.argv) == 1:
-        process_manifests(name, sys.stdin, sys.stdout)
+        process_manifests(name, extra_labels, sys.stdin, sys.stdout)
     elif len(sys.argv) == 2:
         output_file = sys.argv[1]
         with open(output_file, 'w') as file:
-            process_manifests(name, sys.stdin, file)
+            process_manifests(name, extra_labels, sys.stdin, file)
     elif len(sys.argv) == 3:
         input_file = sys.argv[1]
         output_file = sys.argv[2]
         with open(input_file, 'r') as infile, open(output_file, 'w') as outfile:
-            process_manifests(name, infile, outfile)
+            process_manifests(name, extra_labels, infile, outfile)
     else:
         print("Usage: python add-label.py [input_file] [output_file]", file=sys.stderr)
 
