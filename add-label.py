@@ -6,7 +6,6 @@ import sys
 from configparser import ConfigParser
 from copy import deepcopy
 from datetime import datetime
-from typing import cast
 
 import yaml
 
@@ -99,7 +98,7 @@ def process_ns_ingress_from(doc: dict, matching_labels: dict, label_name: str) -
                 if 'podSelector' in entry:
                     elements.extend(create_pod_selector_rules(entry, matching_labels, label_name))
                 else:
-                    elements.extend(entry)
+                    elements.append(entry)
             rule['from'] = elements
 
 
@@ -111,7 +110,7 @@ def process_ns_egress_to(doc: dict, matching_labels: dict, label_name: str) -> N
                 if 'podSelector' in entry:
                     elements.extend(create_pod_selector_rules(entry, matching_labels, label_name))
                 else:
-                    elements.extend(entry)
+                    elements.append(entry)
             rule['to'] = elements
 
 
@@ -149,8 +148,8 @@ def process_manifests(label_name: str, extra_labels: dict, input_stream, output_
 
     # step 2 - update network policies
     step2_documents = []
-    # add the extra labels
-    matching_labels = matching_labels | extra_labels
+    # add the extra labels. If in both, then use the 'matching_labels' version
+    matching_labels = extra_labels | matching_labels
     for doc in filter(lambda x: isinstance(x, dict), step1_documents):
         kind = doc.get("kind", "").lower()
         if kind == "networkpolicy":
@@ -171,8 +170,9 @@ def main():
     extra_labels = {}
     for section in config.sections():
         if section.startswith('label.match.'):
-            result_tuple = cast(tuple[str, str], tuple(config[section]['value'].split(':', 1)))
-            add_to_dict(extra_labels, result_tuple, config[section]['extra.label'])
+            add_to_dict(extra_labels,
+                        (config[section]['label'], config[section]['value']),
+                        config[section]['extra.label.value'])
 
     # Check if a file path is provided as an argument
     if len(sys.argv) == 1:
